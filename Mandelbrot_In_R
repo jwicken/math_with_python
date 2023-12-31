@@ -1,0 +1,55 @@
+library(ggplot2)
+library(viridis)
+
+initialize_image <- function(x_p, y_p) {
+  matrix(0, nrow = y_p, ncol = x_p)
+}
+
+color_points <- function() {
+  x_p <- 400
+  y_p <- 400
+  max_iteration <- 1000
+  image <- initialize_image(x_p, y_p)
+
+  x_min <- -2.5
+  x_max <- 1
+  y_min <- -1
+  y_max <- 1
+
+  for (y in 1:y_p) {
+    for (x in 1:x_p) {
+      real <- x_min + (x / x_p) * (x_max - x_min)
+      imag <- y_min + (y / y_p) * (y_max - y_min)
+      c <- complex(real = real, imaginary = imag)
+      z <- 0 + 0i
+      iteration <- 0
+
+      while (Mod(z) <= 2 && iteration < max_iteration) {
+        z <- z^2 + c
+        iteration <- iteration + 1
+      }
+
+      image[y, x] <- iteration / max_iteration
+    }
+  }
+
+  # Convert the matrix to a data frame
+  image_df <- expand.grid(X = seq(x_min, x_max, length.out = x_p),
+                          Y = seq(y_min, y_max, length.out = y_p))
+  image_df$Color <- as.vector(t(image))
+
+  return(image_df)
+}
+
+# Generate the data
+image_df <- color_points()
+
+# Plotting
+plot <- ggplot(image_df, aes(x = X, y = Y, fill = Color)) +
+  geom_tile() +
+  scale_fill_viridis() +
+  theme_minimal() +
+  coord_fixed()
+
+# Explicitly print the plot
+print(plot)
